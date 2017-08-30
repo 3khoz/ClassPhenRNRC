@@ -4,10 +4,15 @@ library(ncdf4)
 library(maptools)
 
 i=1
-path="D:/Pro1/LC082320842016102201T1-SC20170825201854/" # selecciona el directorio de los rasters
-lst <- list.files(path=path,pattern='.nc$',full.names=TRUE)  #genera una lista de nombre de todos los archivos
+path="C:/Users/idiaz/Downloads/" # selecciona el directorio de los rasters
+lst <- list.files(path=path,pattern='.tar.gz$',full.names=TRUE)  #genera una lista de nombre de todos los archivos
 
-h<-substr(lst,49,114)  # extraer solo seccion de fecha
+h<-substr(lst,26,114)  # extraer solo seccion de fecha
 
-evi <- stack(lst,varname="sr_evi")
+x<-untar(lst[1],list.files(path=lst[1],pattern='.nc$',full.names=TRUE))
+
+untar(lst[1],files=paste(h[1],"/",x)
+        "wp2011-survey/anon-data.csv")
+
+evi <- stack(x,varname="sr_evi")
 pixq <- stack(lst,varname="pixel_qa")
