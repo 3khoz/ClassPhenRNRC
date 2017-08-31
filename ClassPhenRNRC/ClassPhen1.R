@@ -3,24 +3,18 @@ library(raster)
 library(ncdf4)
 library(maptools)
 
+
+path="C:/Users/idiaz/Downloads/L8phen/" 
+folders <- list.files(path=path,pattern='LC08',full.names=TRUE)  
 i=1
-path="C:/Users/idiaz/Downloads/" # selecciona el directorio de los rasters
-lst <- list.files(path=path,pattern='.tar.gz$',full.names=TRUE)  #genera una lista de nombre de todos los archivos
 
-h<-substr(lst,26,114)  # extraer solo seccion de fecha
-
-x<-untar(lst[1],list.files(path=lst[1],pattern='.nc$',full.names=TRUE))
-
-untar(lst[1],files=paste(h[1],"/",x)
-        "wp2011-survey/anon-data.csv")
-
-evi <- stack(x,varname="sr_evi")
-pixq <- stack(lst,varname="pixel_qa")
+#for(i in 1:length(folders)){
+  evi  <-stack(list.files(path=folders[i],pattern=glob2rx("*.nc"),full.names=TRUE),varname="sr_evi")
+  pixq <-stack(list.files(path=folders[i],pattern=glob2rx("*.nc"),full.names=TRUE),varname="pixel_qa")
+  ndvi <-stack(list.files(path=folders[i],pattern=glob2rx("*.nc"),full.names=TRUE),varname="pixel_qa")
+  
+    
+  projection(myclip) <- CRS("+proj=utm +north +zone=18 +datum=WGS84")
 
 
 
-
-phents<-read.table(system.file("extdata/date_tables/datats",package="npphen"),
-                   dec='.',sep='\t',header=TRUE)
-
-Phen(x=as.vector(phents$x),dates=phents$dates,h=1,nGS=23,rge=c(0,10000))
