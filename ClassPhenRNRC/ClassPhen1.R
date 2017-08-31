@@ -16,3 +16,11 @@ untar(lst[1],files=paste(h[1],"/",x)
 
 evi <- stack(x,varname="sr_evi")
 pixq <- stack(lst,varname="pixel_qa")
+
+
+
+
+phents<-read.table(system.file("extdata/date_tables/datats",package="npphen"),
+                   dec='.',sep='\t',header=TRUE)
+
+Phen(x=as.vector(phents$x),dates=phents$dates,h=1,nGS=23,rge=c(0,10000))
