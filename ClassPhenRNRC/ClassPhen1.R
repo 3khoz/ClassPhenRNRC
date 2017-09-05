@@ -1,22 +1,7 @@
-library(rts)
-library(raster)
-library(ncdf4)
-library(maptools)
+# Autor: Ignacio D?az H.
+# Version: Rama principal
+# Fecha primera version: 01-09-2010
 
-<<<<<<< HEAD
-#########  DEFINIR ESPACIO DE TRABAJO
-mypath="Z:/ProyectoClassPhen/L8_RNRC/" # selecciona el directorio de los rasters
-folders <- list.files(path=mypath, pattern=glob2rx("LC0823*"), full.names=T)
-
-i=1
-
-#for(i in 1:length(folders)){
-  mydata<-folders[i]
-  b5<-raster(list.files(path=myimg,pattern=glob2rx("*.nc"),full.names=TRUE))
-  b7<-raster(list.files(path=myimg,pattern=glob2rx("*."),full.names=TRUE))
-  NBR<-((b5-b7)/(b5+b7))
-
-=======
 ## DETALLES DEL PRODUCTO
 ## Requested Processing: Reproject to universal transverse mercator with zone:19 south, 
 ## Output Format is netcdf
@@ -40,38 +25,62 @@ i=1
 ## Path 233 Row 84 = 36 escenas
 ## Total 104 escenas
 
-path="C:/Users/idiaz/Downloads/L8phen/" 
+## Pixel Quality Attrutes (pixel_qa)
+## Clear = 322-386
+
+rasterOptions(tmpdir="Z:/temp/")
+
+rm(list=ls()) #will remove ALL objects
+Sys.time()
+
+library(rts)
+library(raster)
+library(ncdf4)
+library(maptools)
+library(rgdal)
+
+#######################################################
+#########  DEFINIR ESPACIO DE TRABAJO #################
+#######################################################
+
+path="Z:/ProyectoClassPhen/L8_RNRC/" 
 folders <- list.files(path=path,pattern='LC08',full.names=TRUE)  
-i=1
->>>>>>> e718926d875d3a67528f69f1b9d0f21a303bb197
 
-#for(i in 1:length(folders)){
-  evi  <-raster(list.files(path=folders[i],pattern=glob2rx("*.nc"),full.names=TRUE),varname="sr_evi")
-  ndvi <-raster(list.files(path=folders[i],pattern=glob2rx("*.nc"),full.names=TRUE),varname="sr_ndvi")  
-  pixq <-raster(list.files(path=folders[i],pattern=glob2rx("*.nc"),full.names=TRUE),varname="pixel_qa")
-  bqa <-raster(list.files(path=folders[i],pattern=glob2rx("*.nc"),full.names=TRUE),varname="bqa")
+## Lectura de limites vectoriales
+setwd("Z:/ProyectoClassPhen/Shapefiles/")
+myclip<-readOGR("Cipreses.shp")
+projection(myclip) <- CRS("+proj=utm +south +zone=19 +datum=WGS84")
 
-  
-    
-  projection(myclip) <- CRS("+proj=utm +south +zone=19 +datum=WGS84")
+paquete<-stack()
+dates<-NULL
+ids<-NULL  
 
-
-<<<<<<< HEAD
-evi <- stack(x,varname="sr_evi")
-pixq <- stack(lst,varname="pixel_qa")
-
-
-mypath <- "C:/Users/idiaz/Desktop/Landsat8_Maule/"
-folders <- list.files(path=mypath, pattern=glob2rx("LC08_L1TP_*"), full.names=T)
-
-## Calcular NBR para todas las imagenes
-
+#for(i in 1:2){
 for(i in 1:length(folders)){
-  myimg<-folders[i]
-  date<-substr(myimg,56,63)
-  b5<-raster(list.files(path=myimg,pattern=glob2rx("*_01_T1_B5.TIF"),full.names=TRUE))
-  b7<-raster(list.files(path=myimg,pattern=glob2rx("*_01_T1_B7.TIF"),full.names=TRUE))
-  NBR<-((b5-b7)/(b5+b7))
-=======
-  evi  <-stack(list.files(path=folders[i],pattern=glob2rx("*.nc"),full.names=TRUE))
->>>>>>> e718926d875d3a67528f69f1b9d0f21a303bb197
+  evi  <-raster(list.files(path=folders[i],pattern=glob2rx("*.nc"),full.names=TRUE),varname="sr_evi")
+  projection(evi) <- CRS("+proj=utm +south +zone=19 +datum=WGS84")
+  
+  # Extrae fecha de adquisicion del metadata
+  metapath<-list.files(path=folders[i],pattern=glob2rx("*01_T1_MTL.txt"),full.names=TRUE)
+  meta <- readLines(metapath)
+  dat<-meta[grepl("DATE_ACQUIRED = ", meta)]
+  Pdate<-as.Date(substr(dat,21,50),format='%Y-%m-%d')
+  datid<-meta[grepl("LANDSAT_PRODUCT_ID = ", meta)]
+  Pid<-substr(datid,27,66)
+  dates<-rbind(dates,Pdate)
+  ids<-rbind(ids,Pid)
+  names(evi)<-Pdate
+  
+  cr <- crop(evi, extent(myclip), snap="out")  
+  #cr <- mask(x=cr2, mask=msk) 
+  
+  paquete<-stack(paquete,cr)
+  rc_ts<-rts(paquete,dates)
+}
+
+
+library(npphen)
+
+dates <- as.Date(dates.table$date, format='%d/%m/%Y')
+
+
